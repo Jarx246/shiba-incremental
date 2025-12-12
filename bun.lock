@@ -6,6 +6,7 @@
       "name": "my-ripple-app",
       "dependencies": {
         "@ripple-ts/language-server": "^0.2.184",
+        "break_eternity.js": "^2.1.3",
         "jotai": "^2.16.0",
         "jotai-ripple": "^0.1.1",
         "ripple": "latest",
@@ -155,6 +156,8 @@
     "balanced-match": ["balanced-match@1.0.2", "", {}, "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="],
 
     "brace-expansion": ["brace-expansion@1.1.12", "", { "dependencies": { "balanced-match": "^1.0.0", "concat-map": "0.0.1" } }, "sha512-9T9UjW3r0UW5c1Q7GTwllptXwhvYmEzFhzMfZ9H7FQWt+uZePjZPjBP/W1ZEyZ1twGWom5/56TF4lPcqjnDHcg=="],
+
+    "break_eternity.js": ["break_eternity.js@2.1.3", "", {}, "sha512-4tg4j0wc0lhaYAnOHubN5mAyHbhMfUI7adQLO8l/loKqtylZ/kHWp8WYqG2EC0TinSesKvpCi3XeVFcKRUBJsQ=="],
 
     "callsites": ["callsites@3.1.0", "", {}, "sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ=="],
 

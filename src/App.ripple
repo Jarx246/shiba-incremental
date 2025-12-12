@@ -1,31 +1,41 @@
 import { useAtom } from 'jotai-ripple';
 import { atomWithStorage, RESET } from 'jotai/vanilla/utils';
 import Decimal from 'break_eternity.js';
+import { track, effect } from 'ripple';
 
-const stupidShibaLimit = new Decimal(4);
-const remainderAtom = atomWithStorage('shiba_remainder', stupidShibaLimit, {
-	getItem: (key: string) => {
+const dogLimit: Decimal = new Decimal(4);
+const remainderAtom = atomWithStorage<Decimal>('shiba_remainder', dogLimit, {
+	getItem: (key: string): Decimal => {
 		const raw = localStorage.getItem(key);
-		return raw === null ? stupidShibaLimit : new Decimal(raw);
+		return raw === null ? dogLimit : new Decimal(raw);
 	},
-	setItem: (key: string, value: Decimal) => localStorage.setItem(key, value),
-	removeItem: (key: string) => localStorage.removeItem(key),
+	setItem: (key: string, value: Decimal): void => localStorage.setItem(key, value.toString()),
+	removeItem: (key: string): void => localStorage.removeItem(key),
 });
 
 export component App() {
 	const [remainder, setRemainder] = useAtom(remainderAtom);
-	const getVisualValue = () => stupidShibaLimit.sub(@remainder);
-	const goUp = () => setRemainder(
-		(r: Decimal) => stupidShibaLimit.mul(r).div(stupidShibaLimit.add(r)),
-	);
+
+	let clickCount: Tracked<Decimal> = track(new Decimal(0));
+	effect(() => (@clickCount = dogLimit.div(@remainder).sub(1).round()));
+
+	let visualValue: Tracked<Decimal> = track(new Decimal(0));
+	effect(() => (@visualValue = dogLimit.sub(@remainder)));
+
+	const goUp = (): void => setRemainder((r: Decimal) => dogLimit.mul(r).div(dogLimit.add(r)));
 
 	<main>
 		<div>
-			<h1>{`Shiba number (shumber): ${getVisualValue()}`}</h1>
-			<h2>{`Distance to 4.0: ${@remainder}`}</h2>
+			if (@visualValue.eq(0)) {
+				<h1>{'Shiba number (shumber): 1'}</h1>
+			} else {
+				<h1>{`Shiba number (shumber): ${@visualValue}`}</h1>
+			}
+			<h3>{`Times Clicked: ${@clickCount}`}</h3>
 			<button onClick={goUp}>{'go up!'}</button>
 			<section>
-				<h3>{'debug'}</h3>
+				<h1>{'debug'}</h1>
+				<h2>{`Internal distance to ${dogLimit.round()}: ${@remainder}`}</h2>
 				<button onClick={() => setRemainder(RESET)}>{'Reset'}</button>
 			</section>
 		</div>
@@ -41,7 +51,7 @@ export component App() {
 		main :global {
 			display: flex;
 			justify-content: center;
-			align-items: left;
+			align-items: flex-start;
 			height: 100vh;
 			font-family:
 				'ComicMono',
@@ -51,8 +61,8 @@ export component App() {
 			flex-direction: column;
 		}
 		button {
-			/*margin: 0.5rem;
-			padding: 0.5rem 1rem;*/
+			margin: 0.5rem;
+			padding: 0.5rem 1rem;
 			cursor: pointer;
 		}
 	</style>

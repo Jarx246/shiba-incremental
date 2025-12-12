@@ -2,36 +2,58 @@ import { useAtom } from 'jotai-ripple';
 import { atomWithStorage, RESET } from 'jotai/vanilla/utils';
 import Decimal from 'break_eternity.js';
 
-const countAtom = atomWithStorage('count', new Decimal(0), {
+const stupidShibaLimit = new Decimal(4);
+const remainderAtom = atomWithStorage('shiba_remainder', stupidShibaLimit, {
 	getItem: (key: string) => {
 		const raw = localStorage.getItem(key);
-		return raw === null ? new Decimal(0) : new Decimal(raw);
+		return raw === null ? stupidShibaLimit : new Decimal(raw);
 	},
-	setItem: (key: string, value: Decimal) => localStorage.setItem(key, value.toString()),
+	setItem: (key: string, value: Decimal) => localStorage.setItem(key, value),
 	removeItem: (key: string) => localStorage.removeItem(key),
 });
 
 export component App() {
-	const [count, setCount] = useAtom(countAtom);
+	const [remainder, setRemainder] = useAtom(remainderAtom);
+	const getVisualValue = () => stupidShibaLimit.sub(@remainder);
+	const goUp = () => setRemainder(
+		(r: Decimal) => stupidShibaLimit.mul(r).div(stupidShibaLimit.add(r)),
+	);
 
 	<main>
 		<div>
-			<h1>{`Shiba number (shumber): ${@count}`}</h1>
-			<button onClick={() => setCount((c: Decimal) => c.add(1))}>{'go up!'}</button>
-			<button onClick={() => setCount(RESET)}>{'reset'}</button>
+			<h1>{`Shiba number (shumber): ${getVisualValue()}`}</h1>
+			<h2>{`Distance to 4.0: ${@remainder}`}</h2>
+			<button onClick={goUp}>{'go up!'}</button>
+			<section>
+				<h3>{'debug'}</h3>
+				<button onClick={() => setRemainder(RESET)}>{'Reset'}</button>
+			</section>
 		</div>
 	</main>
 
 	<style>
-		main {
+		@font-face {
+			font-family: 'ComicMono';
+			src: url('/ComicMono.ttf') format('truetype');
+			font-weight: normal;
+			font-style: normal;
+		}
+		main :global {
 			display: flex;
 			justify-content: center;
-			align-items: center;
+			align-items: left;
 			height: 100vh;
 			font-family:
+				'ComicMono',
 				'Comic Sans MS',
 				Comic Sans,
 				cursive;
+			flex-direction: column;
+		}
+		button {
+			/*margin: 0.5rem;
+			padding: 0.5rem 1rem;*/
+			cursor: pointer;
 		}
 	</style>
 }

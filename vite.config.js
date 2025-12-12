@@ -3,7 +3,7 @@ import { ripple } from "@ripple-ts/vite-plugin";
 import { resolve } from "node:path";
 
 export default defineConfig({
-  base: "/",
+  base: "/shiba-incremental/",
   publicDir: resolve(__dirname, "src/assets"),
   plugins: [ripple()],
   server: {

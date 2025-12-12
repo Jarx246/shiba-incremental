@@ -2,21 +2,14 @@ import { useAtom } from 'jotai-ripple';
 import { atomWithStorage, RESET } from 'jotai/vanilla/utils';
 import Decimal from 'break_eternity.js';
 
-// custom storage adapter
-const decimalStorage = {
+const countAtom = atomWithStorage('count', new Decimal(0), {
 	getItem: (key: string) => {
 		const raw = localStorage.getItem(key);
 		return raw === null ? new Decimal(0) : new Decimal(raw);
 	},
-	setItem: (key: string, value: Decimal) => {
-		localStorage.setItem(key, value.toString());
-	},
-	removeItem: (key: string) => {
-		localStorage.removeItem(key);
-	},
-};
-
-const countAtom = atomWithStorage('count', new Decimal(0), decimalStorage);
+	setItem: (key: string, value: Decimal) => localStorage.setItem(key, value.toString()),
+	removeItem: (key: string) => localStorage.removeItem(key),
+});
 
 export component App() {
 	const [count, setCount] = useAtom(countAtom);

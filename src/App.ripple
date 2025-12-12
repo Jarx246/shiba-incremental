@@ -9,13 +9,14 @@ const remainderAtom = atomWithStorage<Decimal>('shiba_remainder', dogLimit, {
 		const raw = localStorage.getItem(key);
 		return raw === null ? dogLimit : new Decimal(raw);
 	},
-	setItem: (key: string, value: Decimal): void => localStorage.setItem(key, value.toString()),
+	setItem: (key: string, value: Decimal): void => localStorage.setItem(key, value),
 	removeItem: (key: string): void => localStorage.removeItem(key),
 });
 
 export component App() {
 	const [remainder, setRemainder] = useAtom(remainderAtom);
 
+	// use this for pretty much everything actually
 	let clickCount: Tracked<Decimal> = track(new Decimal(0));
 	effect(() => (@clickCount = dogLimit.div(@remainder).sub(1).round()));
 

@@ -1,0 +1,33 @@
+import { useAtom } from 'jotai-ripple';
+import { atomWithStorage, RESET } from 'jotai/vanilla/utils';
+
+// persisted atom (key: 'count')
+const countAtom = atomWithStorage('count', 0);
+
+export component App() {
+	const [count, setCount] = useAtom(countAtom);
+
+	<main>
+		<div>
+			<h1>
+				{'Shiba number (shumber): '}
+				{@count}
+			</h1>
+			<button onClick={() => setCount((c) => c + 1)}>{'go up!'}</button>
+			<button onClick={() => setCount(RESET)}>{'reset'}</button>
+		</div>
+	</main>
+
+	<style>
+		main {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			font-family:
+				'Comic Sans MS',
+				Comic Sans,
+				cursive;
+		}
+	</style>
+}

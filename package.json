@@ -31,6 +31,7 @@
 	"dependencies": {
 		"@ripple-ts/language-server": "^0.2.184",
 		"break_eternity.js": "^2.1.3",
+		"eternal_notations": "^1.1.1",
 		"jotai": "^2.16.0",
 		"jotai-ripple": "^0.1.1",
 		"ripple": "latest",

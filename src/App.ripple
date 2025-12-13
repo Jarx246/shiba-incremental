@@ -3,11 +3,23 @@ import { atomWithStorage, RESET } from 'jotai/vanilla/utils';
 import Decimal from 'break_eternity.js';
 import { track, effect } from 'ripple';
 
-const dogLimit: Decimal = new Decimal(4);
-const remainderAtom = atomWithStorage<Decimal>('shiba_remainder', dogLimit, {
+const INITIAL_DOG_LIMIT: Decimal = new Decimal(4);
+// Define the threshold for prestige (e.g., within 10^-100 of the current limit)
+const PRESTIGE_THRESHOLD = Decimal.pow(10, -100);
+
+const limitAtom = atomWithStorage<Decimal>('shiba_limit', INITIAL_DOG_LIMIT, {
 	getItem: (key: string): Decimal => {
 		const raw = localStorage.getItem(key);
-		return raw === null ? dogLimit : new Decimal(raw);
+		return raw === null ? INITIAL_DOG_LIMIT : new Decimal(raw);
+	},
+	setItem: (key: string, value: Decimal): void => localStorage.setItem(key, value),
+	removeItem: (key: string): void => localStorage.removeItem(key),
+});
+
+const remainderAtom = atomWithStorage<Decimal>('shiba_remainder', INITIAL_DOG_LIMIT, {
+	getItem: (key: string): Decimal => {
+		const raw = localStorage.getItem(key);
+		return raw === null ? INITIAL_DOG_LIMIT : new Decimal(raw);
 	},
 	setItem: (key: string, value: Decimal): void => localStorage.setItem(key, value),
 	removeItem: (key: string): void => localStorage.removeItem(key),
@@ -15,29 +27,59 @@ const remainderAtom = atomWithStorage<Decimal>('shiba_remainder', dogLimit, {
 
 export component App() {
 	const [remainder, setRemainder] = useAtom(remainderAtom);
+	const [currentLimit, setCurrentLimit] = useAtom(limitAtom);
 
-	// use this for pretty much everything actually
 	let clickCount: Tracked<Decimal> = track(new Decimal(0));
-	effect(() => (@clickCount = dogLimit.div(@remainder).sub(1).round()));
+	effect(() => (@clickCount = @currentLimit.div(@remainder).sub(1).round()));
 
 	let visualValue: Tracked<Decimal> = track(new Decimal(0));
-	effect(() => (@visualValue = dogLimit.sub(@remainder)));
+	effect(() => (@visualValue = @currentLimit.sub(@remainder))); // there was some bullshit happening here earlier i swear i saw it with my own two eyes. it made me do @visualValue = @dogLimit.sub(@remainder).plus(@currentLimit).sub(4)
 
-	const goUp = (): void => setRemainder((r: Decimal) => dogLimit.mul(r).div(dogLimit.add(r)));
+	let canPrestige: Tracked<boolean> = track(false);
+	effect(() => (@canPrestige = @remainder.lt(PRESTIGE_THRESHOLD)));
+
+	let debug: Tracked<boolean> = track(false);
+
+	const goUp = (): void => setRemainder(
+		(r: Decimal) => @currentLimit.mul(r).div(@currentLimit.add(r)),
+	);
+
+	const prestige = (): void => {
+		const newLimit = @currentLimit.add(1);
+		setCurrentLimit(newLimit);
+		setRemainder(newLimit);
+	};
 
 	<main>
 		<div>
-			if (@visualValue.eq(0)) {
-				<h1>{'Shiba number (shumber): 1'}</h1>
+			if (@visualValue.lte(0)) {
+				<h1>{'Shiba number (shumber): 1'}</h1> // this is kinda fucked up but shibas dont know how to count under 1 either so
+			} else if (@visualValue.eq(@currentLimit)) {
+				// <h1>{'Shiba number (shumber): not tellin yuo >:('}</h1> // ill probably try to make it fade out before this point lol
+				<h1>{`Shiba number (shumber): ${@visualValue} - ${@remainder.toPrecision(100)}`}</h1>
+			} else if (@clickCount.lte(10) && @currentLimit.eq(4)) {
+				<h1>{`Shiba number (shumber): ${@visualValue}`}</h1> // do something funny here
 			} else {
 				<h1>{`Shiba number (shumber): ${@visualValue}`}</h1>
 			}
-			<h3>{`Times Clicked: ${@clickCount}`}</h3>
+			<h2>{`Times Clicked: ${@clickCount}`}</h2>
 			<button onClick={goUp}>{'go up!'}</button>
+			if (@canPrestige) {
+				<button onClick={prestige}>{`Shiba will count to ${@currentLimit}...`}</button>
+			}
 			<section>
-				<h1>{'debug'}</h1>
-				<h2>{`Internal distance to ${dogLimit.round()}: ${@remainder}`}</h2>
-				<button onClick={() => setRemainder(RESET)}>{'Reset'}</button>
+				<button onClick={() => (@debug = !@debug)}>
+					<h1>{'debug menu'}</h1>
+				</button>
+				if (@debug) {
+					<h3>{`Internal distance to ${@currentLimit.round()}: ${@remainder}`}</h3>
+					<h3>{`Current Limit: ${@currentLimit}`}</h3>
+					<button onClick={(): void => setRemainder(PRESTIGE_THRESHOLD.div(10))}>
+						{'Prestige Button (gold star for you!)'}
+					</button>
+					<button onClick={() => setRemainder(RESET)}>{'Reset Boy (poor lil guy)'}</button>
+					<button onClick={() => setCurrentLimit(RESET)}>{'Reset Press-teach (enstupiden)'}</button>
+				}
 			</section>
 		</div>
 	</main>
@@ -49,9 +91,12 @@ export component App() {
 			font-weight: normal;
 			font-style: normal;
 		}
+		h1 {
+			white-space: nowrap;
+		}
 		main :global {
 			display: flex;
-			justify-content: center;
+			justify-content: flex-start;
 			align-items: flex-start;
 			height: 100vh;
 			font-family:
@@ -65,6 +110,11 @@ export component App() {
 			margin: 0.5rem;
 			padding: 0.5rem 1rem;
 			cursor: pointer;
+			font-family:
+				'ComicMono',
+				'Comic Sans MS',
+				Comic Sans,
+				cursive;
 		}
 	</style>
 }

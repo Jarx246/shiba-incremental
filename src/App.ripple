@@ -2,9 +2,11 @@ import { useAtom } from 'jotai-ripple';
 import { atomWithStorage, RESET } from 'jotai/vanilla/utils';
 import Decimal from 'break_eternity.js';
 import { track, effect } from 'ripple';
+import * as EternalNotations from 'eternal_notations';
+
+// const brah = new EternalNotations.ScientificNotation().format(1e100);
 
 const INITIAL_DOG_LIMIT: Decimal = new Decimal(4);
-// Define the threshold for prestige (e.g., within 10^-100 of the current limit)
 const PRESTIGE_THRESHOLD = Decimal.pow(10, -100);
 
 const limitAtom = atomWithStorage<Decimal>('shiba_limit', INITIAL_DOG_LIMIT, {
@@ -56,13 +58,17 @@ export component App() {
 				<h1>{'Shiba number (shumber): 1'}</h1> // this is kinda fucked up but shibas dont know how to count under 1 either so
 			} else if (@visualValue.eq(@currentLimit)) {
 				// <h1>{'Shiba number (shumber): not tellin yuo >:('}</h1> // ill probably try to make it fade out before this point lol
-				<h1>{`Shiba number (shumber): ${@visualValue} - ${@remainder.toPrecision(100)}`}</h1>
-			} else if (@clickCount.lte(10) && @currentLimit.eq(4)) {
-				<h1>{`Shiba number (shumber): ${@visualValue}`}</h1> // do something funny here
+				<h1>
+					{`Shiba number (shumber): ${@currentLimit} - ${EternalNotations.Presets.Default.format(
+						@remainder,
+					)}`}
+				</h1>
+				// } else if (@clickCount.lte(10) && @currentLimit.eq(4)) {
+				// <h1>{`Shiba number (shumber): ${@visualValue}`}</h1> // do something funny here
 			} else {
 				<h1>{`Shiba number (shumber): ${@visualValue}`}</h1>
 			}
-			<h2>{`Times Clicked: ${@clickCount}`}</h2>
+			<h2>{`Times Clicked: ${EternalNotations.Presets.Default.format(@clickCount)}`}</h2>
 			<button onClick={goUp}>{'go up!'}</button>
 			if (@canPrestige) {
 				<button onClick={prestige}>{`Shiba will count to ${@currentLimit}...`}</button>
@@ -72,12 +78,22 @@ export component App() {
 					<h1>{'debug menu'}</h1>
 				</button>
 				if (@debug) {
-					<h3>{`Internal distance to ${@currentLimit.round()}: ${@remainder}`}</h3>
 					<h3>{`Current Limit: ${@currentLimit}`}</h3>
+					<h3>
+						{`Internal distance to ${@currentLimit}: ${EternalNotations.Presets.Scientific.format(
+							@remainder,
+						)}`}
+					</h3>
 					<button onClick={(): void => setRemainder(PRESTIGE_THRESHOLD.div(10))}>
 						{'Prestige Button (gold star for you!)'}
 					</button>
-					<button onClick={() => setRemainder(RESET)}>{'Reset Boy (poor lil guy)'}</button>
+					<button onClick={() => setRemainder(RESET)}>
+						{'Reset Boy (poor lil guy)'}
+						<br />
+						{'he will have to start all over again'}
+						<br />
+						{'yuo moster!'}
+					</button>
 					<button onClick={() => setCurrentLimit(RESET)}>{'Reset Press-teach (enstupiden)'}</button>
 				}
 			</section>

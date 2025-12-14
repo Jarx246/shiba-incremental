@@ -6,20 +6,20 @@ shame, for short
 
 1. Install dependencies:
 
-    ```bash
-    bun install # or pbun or yarn
-    ```
+   ```bash
+   bun install # or pnpm or yarn
+   ```
 
 2. Start the development server:
 
-    ```bash
-    bun run dev
-    ```
+   ```bash
+   bun run dev
+   ```
 
 3. Build for production:
-    ```bash
-    bun run build
-    ```
+   ```bash
+   bun run build
+   ```
 
 ## Code Formatting
 

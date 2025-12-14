@@ -31,6 +31,15 @@ export component App() {
 	const [remainder, setRemainder] = useAtom(remainderAtom);
 	const [currentLimit, setCurrentLimit] = useAtom(limitAtom);
 
+	const goUp = (): void => setRemainder(
+		(r: Decimal) => @currentLimit.mul(r).div(@currentLimit.add(r)),
+	);
+	const prestige = (): void => {
+		const newLimit = @currentLimit.add(1);
+		setCurrentLimit(newLimit);
+		setRemainder(newLimit);
+	};
+
 	let clickCount: Tracked<Decimal> = track(new Decimal(0));
 	effect(() => (@clickCount = @currentLimit.div(@remainder).sub(1).round()));
 
@@ -40,20 +49,8 @@ export component App() {
 	let canPrestige: Tracked<boolean> = track(false);
 	effect(() => (@canPrestige = @remainder.lt(PRESTIGE_THRESHOLD)));
 
-	let debug: Tracked<boolean> = track(false);
-
-	const goUp = (): void => setRemainder(
-		(r: Decimal) => @currentLimit.mul(r).div(@currentLimit.add(r)),
-	);
-
-	const prestige = (): void => {
-		const newLimit = @currentLimit.add(1);
-		setCurrentLimit(newLimit);
-		setRemainder(newLimit);
-	};
-
 	<main>
-		<div>
+		<section>
 			if (@visualValue.lte(0)) {
 				<h1>{'Shiba number (shumber): 1'}</h1> // this is kinda fucked up but shibas dont know how to count under 1 either so
 			} else if (@visualValue.eq(@currentLimit)) {
@@ -73,31 +70,9 @@ export component App() {
 			if (@canPrestige) {
 				<button onClick={prestige}>{`Shiba will count to ${@currentLimit}...`}</button>
 			}
-			<section>
-				<button onClick={() => (@debug = !@debug)}>
-					<h1>{'debug menu'}</h1>
-				</button>
-				if (@debug) {
-					<h3>{`Current Limit: ${@currentLimit}`}</h3>
-					<h3>
-						{`Internal distance to ${@currentLimit}: ${EternalNotations.Presets.Scientific.format(
-							@remainder,
-						)}`}
-					</h3>
-					<button onClick={(): void => setRemainder(PRESTIGE_THRESHOLD.div(10))}>
-						{'Prestige Button (gold star for you!)'}
-					</button>
-					<button onClick={() => setRemainder(RESET)}>
-						{'Reset Boy (poor lil guy)'}
-						<br />
-						{'he will have to start all over again'}
-						<br />
-						{'yuo moster!'}
-					</button>
-					<button onClick={() => setCurrentLimit(RESET)}>{'Reset Press-teach (enstupiden)'}</button>
-				}
-			</section>
-		</div>
+		</section>
+		<Shop {currentLimit} {goUp} />
+		<Debug />
 	</main>
 
 	<style>
@@ -107,30 +82,92 @@ export component App() {
 			font-weight: normal;
 			font-style: normal;
 		}
-		h1 {
-			white-space: nowrap;
-		}
-		main :global {
-			display: flex;
-			justify-content: flex-start;
-			align-items: flex-start;
-			height: 100vh;
-			font-family:
-				'ComicMono',
-				'Comic Sans MS',
-				Comic Sans,
-				cursive;
-			flex-direction: column;
-		}
-		button {
-			margin: 0.5rem;
-			padding: 0.5rem 1rem;
-			cursor: pointer;
-			font-family:
-				'ComicMono',
-				'Comic Sans MS',
-				Comic Sans,
-				cursive;
+		:global {
+			h1 {
+				white-space: nowrap;
+			}
+			main {
+				display: flex;
+				justify-content: flex-start;
+				align-items: flex-start;
+				height: 100vh;
+				font-family:
+					'ComicMono',
+					'Comic Sans MS',
+					Comic Sans,
+					cursive;
+				flex-direction: column;
+			}
+			button {
+				margin: 0.5rem;
+				padding: 0.5rem 1rem;
+				cursor: pointer;
+				font-family:
+					'ComicMono',
+					'Comic Sans MS',
+					Comic Sans,
+					cursive;
+			}
 		}
 	</style>
+}
+
+const shibasAtom = atomWithStorage<number>('shiba_items', 0);
+
+export component Shop(props: { currentLimit: Tracked; goUp: () => void }) {
+	const [shibaClickers, setShibaClickers] = useAtom(shibasAtom);
+	effect(() => {
+		if (@shibaClickers <= 0) return;
+		const id = setInterval(props.goUp, 1000 / @shibaClickers);
+		return () => clearInterval(id);
+	});
+
+	<section>
+		<h1>{'Shop'}</h1>
+		<br />
+		<button onClick={() => (setShibaClickers(@shibaClickers + 1))}>
+			{'Hire a dog'}
+			<br />
+			{'to count for yuo!'}
+		</button>
+
+		<h3>{`dogs: ${@shibaClickers}`}</h3>
+	</section>
+}
+
+export component Debug() {
+	const [remainder, setRemainder] = useAtom(remainderAtom);
+	const [currentLimit, setCurrentLimit] = useAtom(limitAtom);
+	const [shibaClickers, setShibaClickers] = useAtom(shibasAtom);
+
+	let debug: Tracked<boolean> = track(false);
+
+	<section>
+		<button onClick={() => (@debug = !@debug)}>
+			<h1>{'debug menu'}</h1>
+		</button>
+
+		if (@debug) {
+			<h3>{`Current Limit: ${@currentLimit}`}</h3>
+			<h3>
+				{`Internal distance to ${@currentLimit}: ${EternalNotations.Presets.Scientific.format(
+					@remainder,
+				)}`}
+			</h3>
+			<button onClick={(): void => setRemainder(PRESTIGE_THRESHOLD.div(10))}>
+				{'Prestige Button (gold star for you!)'}
+			</button>
+			<button onClick={() => setRemainder(RESET)}>
+				{'Reset Boy (poor lil guy)'}
+				<br />
+				{'he will have to start all over again'}
+				<br />
+				{'yuo moster!'}
+			</button>
+			<button onClick={() => setCurrentLimit(RESET)}>{'Reset Press-teach (enstupiden)'}</button>
+			<button onClick={() => setShibaClickers(RESET)}>
+				{'Reset Shibas (kill them. kill them all'}
+			</button>
+		}
+	</section>
 }

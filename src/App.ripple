@@ -1,31 +1,13 @@
 import { useAtom } from 'jotai-ripple';
-import { atomWithStorage, RESET } from 'jotai/vanilla/utils';
+import { RESET } from 'jotai/vanilla/utils';
 import Decimal from 'break_eternity.js';
 import { track, effect } from 'ripple';
 import * as EternalNotations from 'eternal_notations';
+import { limitAtom, remainderAtom, shibasAtom } from './atoms.ts';
 
 // const brah = new EternalNotations.ScientificNotation().format(1e100);
 
-const INITIAL_DOG_LIMIT: Decimal = new Decimal(4);
 const PRESTIGE_THRESHOLD = Decimal.pow(10, -100);
-
-const limitAtom = atomWithStorage<Decimal>('shiba_limit', INITIAL_DOG_LIMIT, {
-	getItem: (key: string): Decimal => {
-		const raw = localStorage.getItem(key);
-		return raw === null ? INITIAL_DOG_LIMIT : new Decimal(raw);
-	},
-	setItem: (key: string, value: Decimal): void => localStorage.setItem(key, value),
-	removeItem: (key: string): void => localStorage.removeItem(key),
-});
-
-const remainderAtom = atomWithStorage<Decimal>('shiba_remainder', INITIAL_DOG_LIMIT, {
-	getItem: (key: string): Decimal => {
-		const raw = localStorage.getItem(key);
-		return raw === null ? INITIAL_DOG_LIMIT : new Decimal(raw);
-	},
-	setItem: (key: string, value: Decimal): void => localStorage.setItem(key, value),
-	removeItem: (key: string): void => localStorage.removeItem(key),
-});
 
 export component App() {
 	const [remainder, setRemainder] = useAtom(remainderAtom);
@@ -111,8 +93,6 @@ export component App() {
 		}
 	</style>
 }
-
-const shibasAtom = atomWithStorage<string[]>('shiba_items', ['#FFA500']);
 
 export component Shop(props: { currentLimit: Tracked; goUp: () => void }) {
 	const [shibaClickers, setShibaClickers] = useAtom(shibasAtom);

@@ -112,27 +112,62 @@ export component App() {
 	</style>
 }
 
-const shibasAtom = atomWithStorage<number>('shiba_items', 0);
+const shibasAtom = atomWithStorage<string[]>('shiba_items', ['#FFA500']);
 
 export component Shop(props: { currentLimit: Tracked; goUp: () => void }) {
 	const [shibaClickers, setShibaClickers] = useAtom(shibasAtom);
 	effect(() => {
-		if (@shibaClickers <= 0) return;
-		const id = setInterval(props.goUp, 1000 / @shibaClickers);
+		if (@shibaClickers.length <= 1) return;
+		const id = setInterval(props.goUp, 1000 / (@shibaClickers.length - 1));
 		return () => clearInterval(id);
 	});
 
+	const increaseShibas = () => {
+		setShibaClickers([
+			...@shibaClickers,
+			function () {
+				let r = Math.floor(Math.random() * 256);
+				let g = Math.floor(Math.random() * 256);
+				let b = Math.floor(Math.random() * 256);
+				return `rgb(${r},${g},${b})`;
+			}(),
+		]);
+	};
 	<section>
 		<h1>{'Shop'}</h1>
 		<br />
-		<button onClick={() => (setShibaClickers(@shibaClickers + 1))}>
+		<button onClick={() => (increaseShibas())}>
 			{'Hire a dog'}
 			<br />
 			{'to count for yuo!'}
 		</button>
 
-		<h3>{`dogs: ${@shibaClickers}`}</h3>
+		<h3>{`dogs: ${@shibaClickers.length}`}</h3>
+
+		<ul>
+			for (const shibaColor of @shibaClickers) {
+				<li style={{ color: shibaColor }}>{'■'}</li>
+			}
+		</ul>
 	</section>
+
+	<style>
+		ul {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			display: flex;
+			flex-wrap: wrap;
+		}
+
+		li {
+			/*
+			padding: 8px 12px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			*/
+		}
+	</style>
 }
 
 export component Debug() {

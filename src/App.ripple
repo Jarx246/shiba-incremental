@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai-ripple';
 import { RESET } from 'jotai/vanilla/utils';
 import Decimal from 'break_eternity.js';
-import { track, effect } from 'ripple';
+import { track, effect, on } from 'ripple';
 import * as EternalNotations from 'eternal_notations';
 import { limitAtom, remainderAtom, shibasAtom, lastSeenAtom } from './atoms.ts';
 

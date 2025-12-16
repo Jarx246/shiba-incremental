@@ -34,56 +34,50 @@ export component App() {
 
 	let offlineApplied: Tracked<boolean> = track(false);
 	effect(() => {
-		if (!@hydrated) return;
+		if (!@hydrated) return; // this check is here otherwise it will reset to some weird value
 		const now = Date.now();
 		const prev = @lastSeen ?? now;
+		if (prev) {
+			// write immediately to prevent double-apply on refresh
+			setLastSeen(now);
 
-		// write immediately to prevent double-apply on refresh
-		setLastSeen(now);
+			const elapsedMs = now - prev;
+			if (elapsedMs <= 0) return;
 
-		const elapsedMs = now - prev;
-		if (elapsedMs <= 0) return;
+			const clickers = @shibaClickers.length ?? 0;
+			if (clickers <= 0) return;
 
-		const clickers = @shibaClickers.length ?? 0;
-		if (clickers <= 0) return;
+			const seconds = new Decimal(elapsedMs).div(1000);
+			const deltaClicks = seconds.mul(clickers);
 
-		const seconds = new Decimal(elapsedMs).div(1000);
-		const deltaClicks = seconds.mul(clickers);
+			const r0 = new Decimal(@remainder);
+			if (r0.eq(0)) return;
 
-		const r0 = new Decimal(@remainder);
-		if (r0.eq(0)) return;
+			// s = 1 / r
+			const s0 = new Decimal(1).div(r0);
+			const s1 = s0.add(deltaClicks.div(@currentLimit));
+			const r1 = new Decimal(1).div(s1);
 
-		// s = 1 / r
-		const s0 = new Decimal(1).div(r0);
-		const s1 = s0.add(deltaClicks.div(@currentLimit));
-		const r1 = new Decimal(1).div(s1);
+			setRemainder(r1);
+		}
 
-		setRemainder(r1);
-	});
-
-	effect(() => {
 		const saveNow = () => {
-			try {
-				setLastSeen(Date.now());
-				console.log('Saved');
-			} catch {
-				console.log('fuck');
-			}
+			setLastSeen(Date.now());
+			console.log('Saved');
 		};
 
-		const onVisibility = () => {
+		const unbindVisibility = on(document, 'visibilitychange', () => {
 			if (document.visibilityState === 'hidden') saveNow();
-		};
-		const onBeforeUnload = () => saveNow();
+		});
 
-		document.addEventListener('visibilitychange', onVisibility);
-		window.addEventListener('beforeunload', onBeforeUnload);
-		const id = setInterval(saveNow, 30000); // every 30s
+		const unbindUnload = on(window, 'beforeunload', saveNow);
+
+		const id = setInterval(saveNow, 30000);
 
 		return () => {
+			unbindVisibility();
+			unbindUnload();
 			clearInterval(id);
-			document.removeEventListener('visibilitychange', onVisibility);
-			window.removeEventListener('beforeunload', onBeforeUnload);
 		};
 	});
 

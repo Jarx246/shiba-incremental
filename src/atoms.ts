@@ -26,3 +26,5 @@ export const shibasAtom = atomWithStorage<string[]>('shiba_items', ['#FFA500']);
 export const shibaAtom = atomWithStorage<{ id: number; color: string }[]>('shiba_items_2', [
 	{ id: 0, color: '#FFA500' },
 ]);
+
+export const lastSeenAtom = atomWithStorage<number>('shiba_last_seen', Date.now());

@@ -3,16 +3,23 @@ import { RESET } from 'jotai/vanilla/utils';
 import Decimal from 'break_eternity.js';
 import { track, effect } from 'ripple';
 import * as EternalNotations from 'eternal_notations';
-import { limitAtom, remainderAtom, shibasAtom } from './atoms.ts';
+import { limitAtom, remainderAtom, shibasAtom, lastSeenAtom } from './atoms.ts';
 
 // const brah = new EternalNotations.ScientificNotation().format(1e100);
 
 const PRESTIGE_THRESHOLD = Decimal.pow(10, -100);
 
 export component App() {
-	const [remainder, setRemainder] = useAtom(remainderAtom);
-	const [currentLimit, setCurrentLimit] = useAtom(limitAtom);
+	let hydrated: Tracked<boolean> = track(false);
+	effect(() => {
+		if (!@currentLimit.eq(4) || !@remainder.eq(4)) {
+			@hydrated = true;
+		}
+	});
 
+	const [remainder, setRemainder] = useAtom(remainderAtom);
+
+	const [currentLimit, setCurrentLimit] = useAtom(limitAtom);
 	const goUp = (): void => setRemainder(
 		(r: Decimal) => @currentLimit.mul(r).div(@currentLimit.add(r)),
 	);
@@ -21,6 +28,64 @@ export component App() {
 		setCurrentLimit(newLimit);
 		setRemainder(newLimit);
 	};
+
+	const [shibaClickers, setShibaClickers] = useAtom(shibasAtom);
+	const [lastSeen, setLastSeen] = useAtom(lastSeenAtom);
+
+	let offlineApplied: Tracked<boolean> = track(false);
+	effect(() => {
+		if (!@hydrated) return;
+		const now = Date.now();
+		const prev = @lastSeen ?? now;
+
+		// write immediately to prevent double-apply on refresh
+		setLastSeen(now);
+
+		const elapsedMs = now - prev;
+		if (elapsedMs <= 0) return;
+
+		const clickers = @shibaClickers.length ?? 0;
+		if (clickers <= 0) return;
+
+		const seconds = new Decimal(elapsedMs).div(1000);
+		const deltaClicks = seconds.mul(clickers);
+
+		const r0 = new Decimal(@remainder);
+		if (r0.eq(0)) return;
+
+		// s = 1 / r
+		const s0 = new Decimal(1).div(r0);
+		const s1 = s0.add(deltaClicks.div(@currentLimit));
+		const r1 = new Decimal(1).div(s1);
+
+		setRemainder(r1);
+	});
+
+	effect(() => {
+		const saveNow = () => {
+			try {
+				setLastSeen(Date.now());
+				console.log('Saved');
+			} catch {
+				console.log('fuck');
+			}
+		};
+
+		const onVisibility = () => {
+			if (document.visibilityState === 'hidden') saveNow();
+		};
+		const onBeforeUnload = () => saveNow();
+
+		document.addEventListener('visibilitychange', onVisibility);
+		window.addEventListener('beforeunload', onBeforeUnload);
+		const id = setInterval(saveNow, 30000); // every 30s
+
+		return () => {
+			clearInterval(id);
+			document.removeEventListener('visibilitychange', onVisibility);
+			window.removeEventListener('beforeunload', onBeforeUnload);
+		};
+	});
 
 	let clickCount: Tracked<Decimal> = track(new Decimal(0));
 	effect(() => (@clickCount = @currentLimit.div(@remainder).sub(1).round()));
